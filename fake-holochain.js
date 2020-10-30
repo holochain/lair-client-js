@@ -24,7 +24,11 @@ client = net.createConnection(SHIM_SOCKETFILE)
 
     const view = new Uint32Array(data.buffer);
     console.log(`got messageID ${view[1].toString(16)} from shim`);
-
+    //TODO:
+    // - send a sample unlock command and see that it gets forwarded through
+    // - send a create keypair command
+    // - send a sign message and see that it works.
+    // - send a sign message to a "hosted" happ and see that that works
 
   })
   .on('error', function(data) {

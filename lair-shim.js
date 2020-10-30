@@ -17,6 +17,11 @@ var SHUTDOWN = false;
 const LAIR_SOCKETFILE = '/tmp/lair/socket';
 const SHIM_SOCKETFILE = '/tmp/lair/shim-socket';
 
+function wormhole(data) {
+  // TODO: actually do the check here that this is a signing message and it's for
+  // a hosted keypair
+  return false;
+}
 
 // the server should just pass all incoming requests to lair
 // except those needed
@@ -34,12 +39,15 @@ function createServer(socket){
       delete connections[self];
     });
 
-    // Messages are buffers. use toString
     stream.on('data', function(data) {
 
-      const view = new Uint32Array(data.buffer);
-      console.log(`got messageID ${view[1].toString(16)} from client, forwarding to lair`);
-      client.write(data);
+      // - intercept messages that are signing requests for the wormhole here.
+      // - otherwise forward through to lair
+      if (!wormhole(data)) {
+        const view = new Uint32Array(data.buffer);
+        console.log(`got messageID ${view[1].toString(16)} from client, forwarding to lair`);
+        client.write(data);
+      }
 
     });
   })
