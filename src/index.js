@@ -1,6 +1,6 @@
 const path				= require('path');
 const log				= require('@whi/stdlog')(path.basename( __filename ), {
-    level: process.env.LOG_LEVEL || 'silly',
+    level: process.env.LOG_LEVEL || 'fatal',
 });
 
 const why				= require('why-is-node-running');
@@ -31,7 +31,7 @@ async function connect ( address ) {
 	process.exit(1);
     });
     client.on('connect', () => {
-	console.log("Connected to lair");
+	log.info("Connected to lair");
     });
 
     function parse_message ( buf ) {

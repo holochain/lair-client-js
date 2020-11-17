@@ -1,3 +1,4 @@
+
 #
 # Project
 #
@@ -7,9 +8,10 @@ node_modules:		package-lock.json
 	npm install
 	touch $@
 LAIR			= lair/socket
+.PHONY:			$(LAIR)
 lair:
 	mkdir lair
-$(LAIR):		lair
+$(LAIR):
 	RUST_LOG=trace lair-keystore -d ./lair > lair.log 2>&1 &
 test-setup:		$(LAIR)
 
