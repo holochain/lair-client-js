@@ -14,6 +14,8 @@ lair:
 $(LAIR):
 	RUST_LOG=trace lair-keystore -d ./lair > lair.log 2>&1 &
 test-setup:		$(LAIR)
+stop-lair:
+	kill $$(cat lair/pid) && rm lair/pid lair/socket lair/store
 
 #
 # Testing
