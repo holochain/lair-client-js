@@ -68,16 +68,6 @@ async function connect ( address ) {
 	return message;
     }
 
-    // Reliable stream parsing with support for pass-through forwarding
-    //
-    // - If: Header exists
-    //   - If: Header is pass-through, forward bytes until message length reached
-    //   - Else: consume body for Header
-    // - Else if: buffer size > header size, parse Header
-    //   - If: Wire Type or Request is for shim, continue
-    //   - Else: mark header as pass-through and begin forwarding bytes
-    // - Else: wait for next buffer
-    //
     client.on('data', function( buf ) {
 	let req				= parse_message( buf );
 	log.silly("Received request (%s): %s", buf.length, buf.toString("hex") );

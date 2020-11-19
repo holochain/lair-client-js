@@ -34,9 +34,13 @@ class LairClientError extends Error {
 class ConversionError extends LairClientError {
     [Symbol.toStringTag]		= ConversionError.name;
 }
+class ParserError extends LairClientError {
+    [Symbol.toStringTag]		= ParserError.name;
+}
 
 
 module.exports = {
     LairClientError,
     ConversionError,
+    ParserError
 };
