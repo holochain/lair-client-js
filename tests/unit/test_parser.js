@@ -3,6 +3,7 @@ const log				= require('@whi/stdlog')(path.basename( __filename ), {
     level: process.env.LOG_LEVEL || 'fatal',
 });
 
+const stream				= require('stream');
 const expect				= require('chai').expect;
 const { Parser }			= require('../../src/parser.js');
 
@@ -21,7 +22,7 @@ const rest_of_payload			= Buffer.from("7faae00ea2cacb27ba07d10ecb231c16672c0246a
 
 
 function parser_tests () {
-    it("should parse buffer with a complete message", async () => {
+    it("should parse chunk with a complete message", async () => {
 	const parser			= new Parser();
 
 	parser.consume( full_msg );
@@ -37,7 +38,7 @@ function parser_tests () {
 	}
     });
 
-    it("should parse buffers with a partial messages", async () => {
+    it("should parse chunks with a partial messages", async () => {
 	const parser			= new Parser();
 
 	parser.consume( half1_msg );
@@ -58,7 +59,7 @@ function parser_tests () {
 	}
     });
 
-    it("should parse buffers with a partial header message", async () => {
+    it("should parse chunks with a partial header message", async () => {
 	const parser			= new Parser();
 
 	parser.consume( half1_head );
@@ -81,7 +82,7 @@ function parser_tests () {
 	}
     });
 
-    it("should parse 2 packages from several mixed buffers", async () => {
+    it("should parse 2 packages from several mixed chunks", async () => {
 	const chunks				= [
 	    "00010000100000ff0100000000000000ae6dd17372ce0fba967ffe26ccf02cd8d7ce670028adc3c90346d4a1b2f22d7fc7e9d5ad8f4420d9e32bb3f55e89e9467f7d2254",
 	    "27d9abca6832dc581f947faae00ea2cacb27ba07d10ecb231c16672c0246af177da578ae57dafbed8a6f268d7f50e0247182f2a753509c3e998efde7d1139d47a38b51fb",
@@ -107,6 +108,36 @@ function parser_tests () {
 	    if ( count === 1 ) {
 		expect( header.wire_type	).to.equal( 4278190096 );
 		expect( payload			).to.have.length( 240 );
+		continue;
+	    }
+
+	    expect( payload			).to.have.length( 16 );
+
+	    parser.stop();
+	}
+    });
+
+    it("should parse 2 packages from a single chunk", async () => {
+	const chunks				= [
+	    "20000000100000ff0100000000000000ae6dd17372ce0fbaae6dd17372ce0fba20000000100000ff0100000000000000ae6dd17372ce0fbaae6dd17372ce0fba",
+	];
+
+	const parser			= new Parser();
+
+	parser.consume( Buffer.from( chunks.shift(), "hex" ) );
+
+	let count			= 0;
+	for await ( let LairPackage of parser ) {
+	    if ( LairPackage === null )
+		throw new Error(`should not get here`);
+
+	    const { header,
+		    payload }		= LairPackage;
+	    count++;
+
+	    if ( count === 1 ) {
+		expect( header.wire_type	).to.equal( 4278190096 );
+		expect( payload			).to.have.length( 16 );
 		continue;
 	    }
 

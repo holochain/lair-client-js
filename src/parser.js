@@ -3,7 +3,7 @@ const log				= require('@whi/stdlog')(path.basename( __filename ), {
     level: process.env.LOG_LEVEL || 'silly',
 });
 
-
+const stream				= require('stream');
 const {
     ParserError,
 }					= require('./error.js');;
@@ -86,9 +86,11 @@ class Parser {
 	};
 
 	if ( buf.length >= Header.length ) {
+	    let payload			= buf.slice( 0, Header.length );
+	    console.log("Complete package", Header, payload );
 	    this.next({
 		"header":	Header,
-		"payload":	buf.slice( 0, Header.length ),
+		payload,
 	    });
 
 	    buf				= buf.slice( Header.length );
