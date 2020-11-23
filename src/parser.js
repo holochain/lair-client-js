@@ -4,12 +4,9 @@ const log				= require('@whi/stdlog')(path.basename( __filename ), {
 });
 
 const stream				= require('stream');
-const {
-    ParserError,
-}					= require('./error.js');;
+const { LairClientError }		= require('./constants.js');;
 
 const delay				= (ms) => new Promise(f => setTimeout(f, ms));
-
 
 const MSG_LEN_SIZE			= 4;
 const WIRE_TYPE_SIZE			= 4;
@@ -18,6 +15,12 @@ const HEADER_SIZE			= MSG_LEN_SIZE + WIRE_TYPE_SIZE + MSG_ID_SIZE;
 
 const STATE_GET_HEADER			= 0;
 const STATE_GET_PAYLOAD			= 1;
+
+
+class ParserError extends LairClientError {
+    [Symbol.toStringTag]		= ParserError.name;
+}
+
 
 class MessageParser extends stream.Duplex {
     constructor () {

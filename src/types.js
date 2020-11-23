@@ -7,12 +7,12 @@ const log				= require('@whi/stdlog')(path.basename( __filename ), {
 const {
     $TYPE,
     $LAIRCLIENT,
-}					= require('./constants.js');;
-const {
     LairClientError,
-    ConversionError,
-}					= require('./error.js');;
+}					= require('./constants.js');;
 
+class ConversionError extends LairClientError {
+    [Symbol.toStringTag]		= ConversionError.name;
+}
 
 function assert_byte_size ( bytes, expected_length ) {
     if ( bytes.length > expected_length )
@@ -99,6 +99,11 @@ class LairString extends LairType {
     }
 
     value () {
+	// Parsing a Big Int to Int
+	// - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER
+	//
+	// Since the total message size is limited to 4 bytes, we should never run into a large
+	// number parsing issue.
 	let length			= this.view.readBigInt64LE();
 	return this.view.toString( undefined, 8, 8 + parseInt(length) );
     }
