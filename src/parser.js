@@ -4,14 +4,10 @@ const log				= require('@whi/stdlog')(path.basename( __filename ), {
 });
 
 const stream				= require('stream');
-const { LairClientError }		= require('./constants.js');;
+const { LairClientError,
+        HEADER_SIZE }			= require('./constants.js');;
 
 const delay				= (ms) => new Promise(f => setTimeout(f, ms));
-
-const MSG_LEN_SIZE			= 4;
-const WIRE_TYPE_SIZE			= 4;
-const MSG_ID_SIZE			= 8;
-const HEADER_SIZE			= MSG_LEN_SIZE + WIRE_TYPE_SIZE + MSG_ID_SIZE;
 
 const STATE_GET_HEADER			= 0;
 const STATE_GET_PAYLOAD			= 1;
@@ -73,27 +69,28 @@ class MessageParser extends stream.Duplex {
     }
 
     consume ( n ) {
-	this._bufferedBytes -= n;
+	this._bufferedBytes	       -= n;
 
-	if (n === this._buffers[0].length) return this._buffers.shift();
+	if ( n === this._buffers[0].length )
+	    return this._buffers.shift();
 
-	if (n < this._buffers[0].length) {
-	    const buf = this._buffers[0];
-	    this._buffers[0] = buf.slice(n);
-	    return buf.slice(0, n);
+	if ( n < this._buffers[0].length ) {
+	    const buf			= this._buffers[0];
+	    this._buffers[0]		= buf.slice( n );
+	    return buf.slice( 0, n );
 	}
 
-	const dst = Buffer.allocUnsafe(n);
+	const dst			= Buffer.allocUnsafe( n );
 
 	do {
-	    const buf = this._buffers[0];
-	    const offset = dst.length - n;
+	    const buf			= this._buffers[0];
+	    const offset		= dst.length - n;
 
-	    if (n >= buf.length) {
-		dst.set(this._buffers.shift(), offset);
+	    if ( n >= buf.length ) {
+		dst.set( this._buffers.shift(), offset );
 	    } else {
-		dst.set(new Uint8Array(buf.buffer, buf.byteOffset, n), offset);
-		this._buffers[0] = buf.slice(n);
+		dst.set( new Uint8Array(buf.buffer, buf.byteOffset, n), offset );
+		this._buffers[0]	= buf.slice( n );
 	    }
 
 	    n -= buf.length;
