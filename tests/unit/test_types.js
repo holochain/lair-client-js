@@ -37,13 +37,13 @@ function types_tests () {
 
 	expect(() => {
 	    bytes[0]			= 100;
-	    bytes.toType("string");
-	}).to.throw("Not enough bytes", ConversionError);
+	    bytes.toType( LairString );
+	}).to.throw("Not enough bytes: LairString", ConversionError);
 
 	expect(() => {
 	    bytes[0]			= 1;
-	    bytes.toType("string");
-	}).to.throw("Too many bytes", ConversionError);
+	    bytes.toType( LairString );
+	}).to.throw("Too many bytes: LairString", ConversionError);
     });
 
     it("should encode/decode type 'sized'", async () => {
@@ -67,13 +67,13 @@ function types_tests () {
 
 	expect(() => {
 	    bytes[0]			= 100;
-	    bytes.toType("string");
-	}).to.throw("Not enough bytes", ConversionError);
+	    bytes.toType( LairSized );
+	}).to.throw("Not enough bytes: LairSized", ConversionError);
 
 	expect(() => {
 	    bytes[0]			= 1;
-	    bytes.toType("string");
-	}).to.throw("Too many bytes", ConversionError);
+	    bytes.toType( LairSized );
+	}).to.throw("Too many bytes: LairSized", ConversionError);
     });
 
     it("should encode/decode wire type 'Unlock Passphrase Response (4278190097)'", async () => {
@@ -83,7 +83,7 @@ function types_tests () {
 	expect( wiretype.isResponse()	).to.be.true;
 	expect( wiretype instanceof UnlockPassphraseResponse ).to.be.true;
 
-	let bytes			= wiretype.toBuffer( 1 );
+	let bytes			= wiretype.toMessage( 1 );
 	expect( bytes.toHex()		).to.equal( compress("21 00 00 00 11 00 00 ff 01 00 00 00 00 00 00 00 09 00 00 00 00 00 00 00 50 61 73 73 77 30 72 64 21") );
 
 
@@ -98,7 +98,7 @@ function types_tests () {
 
 	expect(() => {
 	    UnlockPassphraseResponse.from( bytes.slice( 16, 26 ) );
-	}).to.throw("does not have enough bytes for LairString", ConversionError);
+	}).to.throw("Not enough bytes: LairString", ConversionError);
     });
 
     it("should encode/decode wire type 'Sign by Public Key Request (576)'", async () => {
@@ -109,7 +109,7 @@ function types_tests () {
 	expect( wiretype.isRequest()	).to.be.true;
 	expect( wiretype instanceof SignByPublicKeyRequest ).to.be.true;
 
-	let bytes			= wiretype.toBuffer( 1 );
+	let bytes			= wiretype.toMessage( 1 );
 	expect( bytes.toHex()		).to.equal( "600000004002000001000000000000003ffae1d875986b6bbac03eb277eee505fc36ca3022968f66fb412c4b477dc51c28000000000000000554898a56b4ff4e83be465cd64d0fc9127904a05aaae7b645cbfcc1913b1cd387752b4824114bc1" );
 
 

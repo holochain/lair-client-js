@@ -15,31 +15,14 @@ class ConversionError extends LairClientError {
     [Symbol.toStringTag]		= ConversionError.name;
 }
 
-function assert_byte_size ( bytes, expected_length ) {
+function assert_byte_size ( bytes, expected_length, constructor ) {
     if ( bytes.length > expected_length )
-	throw new ConversionError(`Too many bytes: expected ${expected_length} bytes but received ${bytes.length} bytes`);
+	throw new ConversionError(`Too many bytes: ${constructor.name} expected ${expected_length} bytes but there are ${bytes.length} bytes available`);
     else if ( bytes.length < expected_length )
-	throw new ConversionError(`Not enough bytes: expected ${expected_length} bytes but received ${bytes.length} bytes`);
+	throw new ConversionError(`Not enough bytes: ${constructor.name} expected ${expected_length} bytes but there are only ${bytes.length} bytes available`);
 }
-
-
-const type_converters			= {
-    "string": function ( buf ) {
-	const len			= buf.readBigInt64LE();
-	const str			= buf.slice(8);
-
-	assert_byte_size( str, len );
-
-	return str.toString();
-    },
-    "sized": function ( buf ) {
-	const len			= buf.readBigInt64LE();
-	const bytes			= buf.slice(8);
-
-	assert_byte_size( bytes, len );
-
-	return bytes;
-    },
+function slice_origin ( src, start, end ) {
+    return new Uint8Array(src.buffer, src.byteOffset + start, end);
 }
 
 
@@ -73,7 +56,9 @@ class LairType extends Uint8Array {
 	if ( !( src instanceof Uint8Array ) )
 	    throw new TypeError(`${this.name} can only be created from a Uint8Array: not '${typeof src}'`);
 
-	let bytes			= new Uint8Array(src.buffer, src.byteOffset, this.SIZE);
+	let bytes			= slice_origin( src, 0, this.SIZE );
+	assert_byte_size( bytes, this.SIZE, this );
+
 	let u8s				= new this( this.SIZE );
 	u8s.set( bytes );
 
@@ -97,7 +82,7 @@ class LairType extends Uint8Array {
     }
 
     toType ( type ) {
-	return type_converters[type]( this.view );
+	return type.fromSource( this.view );
     }
 
     toHex ( prefix = false ) {
@@ -120,11 +105,12 @@ class LairString extends LairType {
 	const str_len			= parseInt( src.readBigUInt64LE() );
 	const size			= 8 + str_len;
 
+	assert_byte_size( src, size, this );
 	if ( src.length < size )
 	    throw new ConversionError(`Source (${src.length}) does not have enough bytes for ${this.name} (${size})`);
 
 	const u8s			= new LairString( size );
-	u8s.set( new Uint8Array(src.buffer, src.byteOffset, size) );
+	u8s.set( slice_origin( src, 0, size ) );
 
 	return u8s;
     }
@@ -164,11 +150,10 @@ class LairSized extends LairType {
 	const byte_len			= parseInt( src.readBigUInt64LE() );
 	const size			= 8 + byte_len;
 
-	if ( src.length < size )
-	    throw new ConversionError(`Source (${src.length}) does not have enough bytes for ${this.name} (${size})`);
+	assert_byte_size( src, size, this );
 
 	const u8s			= new this( size );
-	u8s.set( new Uint8Array(src.buffer, src.byteOffset, size) );
+	u8s.set( slice_origin( src, 0, size ) );
 
 	return u8s;
     }
@@ -207,6 +192,7 @@ class LairStruct extends Array {
     [Symbol.toStringTag]		= LairStruct.name;
 
     static from ( source, has_header_prefix = false ) {
+	source				= Buffer.from( source );
 	let struct			= new this();
 
 	if ( has_header_prefix === true )
@@ -215,7 +201,7 @@ class LairStruct extends Array {
 	for (let i=0; i < this.PAYLOAD.length; i++) {
 	    let type			= this.PAYLOAD[i];
 
-	    struct[i]			= type.fromSource( source.view );
+	    struct[i]			= type.fromSource( source );
 	    source			= source.slice( struct[i].length );
 	}
 
@@ -243,7 +229,7 @@ class LairStruct extends Array {
 	}
     }
 
-    toBuffer ( msg_id ) {
+    toMessage ( msg_id ) {
 	if (msg_id === undefined) {
 	    if ( this instanceof LairResponse )
 		throw new TypeError(`Message ID must be provided for Lair responses`);
