@@ -200,9 +200,10 @@ class LairStruct extends Array {
 
 	for (let i=0; i < this.PAYLOAD.length; i++) {
 	    let type			= this.PAYLOAD[i];
+	    let value			= type.fromSource( source );
+	    source			= source.slice( value.length );
 
-	    struct[i]			= type.fromSource( source );
-	    source			= source.slice( struct[i].length );
+	    struct.push( value );
 	}
 
 	if ( source.length > 0 )
@@ -218,15 +219,25 @@ class LairStruct extends Array {
 	    throw new ConversionError(`Received more arguments (${args.length}) than template allows for ${this.name}`);
 
 	this.byteLength			= HEADER_SIZE;
-	for (let i=0; i < this.constructor.PAYLOAD.length; i++) {
+	for (let i=0; i < args.length; i++) {
 	    let type			= this.constructor.PAYLOAD[i];
 	    let value			= args[i] === undefined
-		? []
+		? new LairType(0)
 		: type.from( args[i] );
 
 	    this.push( value );
-	    this.byteLength	       += value.length;
 	}
+    }
+
+    push ( value ) {
+	if ( !(value instanceof LairType) )
+	    throw new TypeError(`Structs can only contain LairType objects, not '${value.constructor.name}'`);
+
+	if ( this.length === this.constructor.PAYLOAD.length )
+	    throw new Error(`Cannot push another item onto ${this.constructor.name} because it already contains the expected number of payoad items.`);
+
+	this.byteLength		       += value.length;
+	return super.push( ...arguments );
     }
 
     toMessage ( msg_id ) {

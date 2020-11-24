@@ -82,6 +82,7 @@ function types_tests () {
 	expect( wiretype		).to.be.a("LairStruct");
 	expect( wiretype.isResponse()	).to.be.true;
 	expect( wiretype instanceof UnlockPassphraseResponse ).to.be.true;
+	expect( wiretype.byteLength	).to.equal( 33 );
 
 	let bytes			= wiretype.toMessage( 1 );
 	expect( bytes.toHex()		).to.equal( compress("21 00 00 00 11 00 00 ff 01 00 00 00 00 00 00 00 09 00 00 00 00 00 00 00 50 61 73 73 77 30 72 64 21") );
@@ -89,6 +90,7 @@ function types_tests () {
 
 	let struct			= UnlockPassphraseResponse.from( bytes, true );;
 
+	expect( struct.byteLength	).to.equal( 33 );
 	expect( struct[0]		).to.be.a("LairType");
 	expect( struct.value(0)		).to.equal( passphrase );
 
@@ -108,6 +110,7 @@ function types_tests () {
 	expect( wiretype		).to.be.a("LairStruct");
 	expect( wiretype.isRequest()	).to.be.true;
 	expect( wiretype instanceof SignByPublicKeyRequest ).to.be.true;
+	expect( wiretype.byteLength	).to.equal( 96 );
 
 	let bytes			= wiretype.toMessage( 1 );
 	expect( bytes.toHex()		).to.equal( "600000004002000001000000000000003ffae1d875986b6bbac03eb277eee505fc36ca3022968f66fb412c4b477dc51c28000000000000000554898a56b4ff4e83be465cd64d0fc9127904a05aaae7b645cbfcc1913b1cd387752b4824114bc1" );
@@ -115,10 +118,15 @@ function types_tests () {
 
 	let struct			= SignByPublicKeyRequest.from( bytes, true );;
 
+	expect( struct.byteLength		).to.equal( 96 );
 	expect( struct[0].toHex()		).to.equal( pub_key.toString("hex") );
 	expect( struct[1].toHex()		).to.equal( "2800000000000000" + message.toString("hex") );
 	expect( struct.value(0).toString("hex")	).to.equal( pub_key.toString("hex") );
 	expect( struct.value(1).toString("hex")	).to.equal( message.toString("hex") );
+
+	expect(() => {
+	    struct.push( new LairType(0) );
+	}).to.throw("Cannot push another item onto SignByPublicKeyRequest", Error);
     });
 }
 
