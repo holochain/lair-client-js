@@ -1,6 +1,6 @@
 const path				= require('path');
 const log				= require('@whi/stdlog')(path.basename( __filename ), {
-    level: process.env.LOG_LEVEL || 'silly',
+    level: process.env.LOG_LEVEL || 'fatal',
 });
 
 
@@ -10,19 +10,29 @@ const {
     LairClientError,
 }					= require('./constants.js');;
 
+
 class ConversionError extends LairClientError {
     [Symbol.toStringTag]		= ConversionError.name;
 }
 
+
 function assert_byte_size ( bytes, expected_length, constructor ) {
+    log.silly("Asserting that input (%s) has exactly %s bytes for type %s", () => [
+	bytes.length, expected_length, constructor.name ]);
     if ( bytes.length > expected_length )
 	throw new ConversionError(`Too many bytes: ${constructor.name} expected ${expected_length} bytes but there are ${bytes.length} bytes available`);
     else if ( bytes.length < expected_length )
 	throw new ConversionError(`Not enough bytes: ${constructor.name} expected ${expected_length} bytes but there are only ${bytes.length} bytes available`);
 }
 function slice_origin ( src, start, end ) {
-    return new Uint8Array(src.buffer, src.byteOffset + start, end);
+    let offset				= src.byteOffset + start;
+    let length				= Math.min( end, src.length );
+
+    log.silly("Slicing [%s..%s] from original ArrayBuffer (%s)", () => [
+	offset, offset + length, src.buffer.byteLength ]);
+    return new Uint8Array( src.buffer, offset, length );
 }
+
 
 
 class LairType extends Uint8Array {
@@ -41,25 +51,28 @@ class LairType extends Uint8Array {
 	return false;
     }
 
-    static fromSource ( bytes ) {
+    static fromSource ( src, strict = true ) {
 	if ( this.SIZE === Infinity )
 	    throw new ConversionError(`Cannot use LairType.fromSource for types without a fixed size (${this.SIZE})`);
 
-	return this.from( bytes );
+	return this.from( src, strict );
     }
 
-    static from ( src ) {
+    static from ( src, strict ) {
 	if ( this.SIZE === Infinity )
 	    throw new ConversionError(`Cannot use LairType.from for types without a fixed size (${this.SIZE})`);
 
 	if ( !( src instanceof Uint8Array ) )
 	    throw new TypeError(`${this.name} can only be created from a Uint8Array: not '${typeof src}'`);
 
-	let bytes			= slice_origin( src, 0, this.SIZE );
-	assert_byte_size( bytes, this.SIZE, this );
+	if ( strict === false ) {
+	    src				= slice_origin( src, 0, this.SIZE );
+	}
+
+	assert_byte_size( src, this.SIZE, this );
 
 	let u8s				= new this( this.SIZE );
-	u8s.set( bytes );
+	u8s.set( src );
 
 	return u8s;
     }
@@ -97,19 +110,21 @@ class LairType extends Uint8Array {
 
 class LairString extends LairType {
 
-    static fromSource ( src ) {
+    static fromSource ( src, strict = true ) {
 	if ( src.length < 8 )
 	    throw new ConversionError(`Source (${src.length}) does not have enough bytes to get ${this.name} size (min. 8 bytes)`);
 
 	const str_len			= parseInt( src.readBigUInt64LE() );
 	const size			= 8 + str_len;
 
-	assert_byte_size( src, size, this );
-	if ( src.length < size )
-	    throw new ConversionError(`Source (${src.length}) does not have enough bytes for ${this.name} (${size})`);
+	if ( strict === false ) {
+	    src				= slice_origin( src, 0, size );
+	}
 
-	const u8s			= new LairString( size );
-	u8s.set( slice_origin( src, 0, size ) );
+	assert_byte_size( src, size, this );
+
+	const u8s			= new this( size );
+	u8s.set( src );
 
 	return u8s;
     }
@@ -119,7 +134,7 @@ class LairString extends LairType {
 	    throw new TypeError(`${this.constructor.name} can only be created from type String: not '${typeof string}'`);
 
 	const size			= Buffer.byteLength( string );
-	const u8s			= new LairString( 8 + size );
+	const u8s			= new this( 8 + size );
 
 	u8s.view.writeBigUInt64LE( BigInt(size),	0 );
 	u8s.view.write( string,				8 );
@@ -142,17 +157,23 @@ Object.defineProperty( LairType, "SIZE", { value: Infinity, writable: false });
 
 class LairSized extends LairType {
 
-    static fromSource ( src ) {
+    static fromSource ( src, strict = true ) {
 	if ( src.length < 8 )
 	    throw new ConversionError(`Source (${src.length}) does not have enough bytes to get ${this.name} size (min. 8 bytes)`);
 
 	const byte_len			= parseInt( src.readBigUInt64LE() );
 	const size			= 8 + byte_len;
 
+	if ( strict === false ) {
+	    log.silly("%s needs %s bytes from source (%s)", () => [
+		this.name, size, src.length ]);
+	    src				= slice_origin( src, 0, size );
+	}
+
 	assert_byte_size( src, size, this );
 
 	const u8s			= new this( size );
-	u8s.set( slice_origin( src, 0, size ) );
+	u8s.set( src );
 
 	return u8s;
     }
@@ -162,7 +183,7 @@ class LairSized extends LairType {
 	    throw new TypeError(`${this.constructor.name} can only be created from a Uint8Array: not '${typeof bytes}'`);
 
 	const size			= bytes.length;
-	const u8s			= new LairSized( 8 + size );
+	const u8s			= new this( 8 + size );
 
 	u8s.view.writeBigUInt64LE( BigInt(size),	0 );
 	u8s.view.fill( bytes,				8 );
@@ -177,15 +198,52 @@ class LairSized extends LairType {
 }
 Object.defineProperty( LairSized, "SIZE", { value: Infinity, writable: false });
 
+class LairInteger extends LairType {
+    static from ( src, strict ) {
+	if ( typeof src === "number" ) {
+	    let n			= src;
+	    src				= Buffer.allocUnsafe( this.SIZE );
+
+	    src.writeUInt32LE( n );
+	    log.silly("%s converted integer (%s) to bytes: %s", () => [
+		this.name, n, src.toString("hex") ]);
+	}
+	return super.from( src, strict );
+    }
+
+    value () {
+	return this.view.readUInt32LE();
+    }
+}
+Object.defineProperty( LairInteger, "SIZE", { value: 4, writable: false });
+
 
 class LairPublicKey extends LairType {}
 Object.defineProperty( LairPublicKey, "SIZE", { value: 32, writable: false });
 
-
 class LairSignature extends LairType {}
 Object.defineProperty( LairSignature, "SIZE", { value: 64, writable: false });
 
+class LairKeystoreIndex extends LairInteger {}
+Object.defineProperty( LairKeystoreIndex, "SIZE", { value: 4, writable: false });
 
+class LairEntryType extends LairInteger {}
+Object.defineProperty( LairEntryType, "SIZE", { value: 4, writable: false });
+
+class LairDigest extends LairType {}
+Object.defineProperty( LairDigest, "SIZE", { value: 32, writable: false });
+
+class LairCert extends LairSized {}
+Object.defineProperty( LairCert, "SIZE", { value: Infinity, writable: false });
+
+class LairCertSNI extends LairSized {}
+Object.defineProperty( LairCertSNI, "SIZE", { value: Infinity, writable: false });
+
+class LairCertAlgorithm extends LairInteger {}
+Object.defineProperty( LairCertAlgorithm, "SIZE", { value: 4, writable: false });
+
+class LairCertPrivateKey extends LairSized {}
+Object.defineProperty( LairCertPrivateKey, "SIZE", { value: Infinity, writable: false });
 
 
 module.exports = {
@@ -196,6 +254,13 @@ module.exports = {
     LairSized,
     LairPublicKey,
     LairSignature,
+    LairKeystoreIndex,
+    LairEntryType,
+    LairDigest,
+    LairCert,
+    LairCertSNI,
+    LairCertAlgorithm,
+    LairCertPrivateKey,
 
     // Error types
     ConversionError,
