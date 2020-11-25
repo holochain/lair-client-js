@@ -6,6 +6,7 @@ const log				= require('@whi/stdlog')(path.basename( __filename ), {
 const stream				= require('stream');
 const { LairClientError,
         HEADER_SIZE }			= require('./constants.js');;
+const { ...structs }			= require('./structs.js');
 
 const delay				= (ms) => new Promise(f => setTimeout(f, ms));
 
@@ -115,10 +116,14 @@ class MessageParser extends stream.Duplex {
 	    }
 	});
 
+	const wt_id			= header_bytes.readUInt32LE(4);
+	const wt_cls			= structs[wt_id];
 	this.current_msg		= {
 	    "length":		header_bytes.readUInt32LE() - HEADER_SIZE,
-	    "wire_type":	header_bytes.readUInt32LE(4),
-	    "id":		header_bytes.slice(8).toString('hex'),
+	    "wire_type":	wt_cls.name,
+	    "wire_type_id":	wt_id,
+	    "wire_type_class":	wt_cls,
+	    "id":		parseInt( header_bytes.readBigUInt64LE(8) ),
 	    "payload":		() => payload_promise,
 	};
 

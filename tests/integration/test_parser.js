@@ -14,11 +14,15 @@ function parse_tests () {
     it("should connect to lair", async () => {
 	const client			= await lair.connect( LAIR_SOCKETFILE );
 
-	expect( client.bytesRead	).to.equal( 0 );
+	try {
+	    let resp			= await client.request( new client.TLS.CreateCert( 512 ) );
 
-	await delay( 400 );
-
-	expect( client.bytesRead	).to.equal( 512 );
+	    expect( resp.value(0)		).to.be.a('number');
+	    expect( resp.value(1)		).to.be.a('uint8array');
+	    expect( resp.value(2)		).to.be.a('uint8array');
+	} finally {
+	    client.destroy();
+	}
     });
 
     // it("should fail to parse JSON into error package", async () => {

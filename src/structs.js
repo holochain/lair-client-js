@@ -47,7 +47,7 @@ class LairStruct extends Array {
 	}
 
 	if ( source.length > 0 )
-	    log.warn("source (%s) for struct %s still has some bytes leftover; this may be unexpected.", source.length, struct.name );
+	    log.warn("source (%s) for struct %s still has some bytes leftover; this may be unexpected.", source.length, this.name );
 
 	return struct;
     }
@@ -90,6 +90,7 @@ class LairStruct extends Array {
 	}
 
 	let buf				= new LairType( this.byteLength );
+	buf.message_id			= msg_id;
 
 	buf.view.writeUInt32LE( this.byteLength );
 	buf.view.writeUInt32LE( this.constructor.WIRE_TYPE,	4 );
@@ -120,12 +121,16 @@ class LairStruct extends Array {
 }
 
 class LairRequest extends LairStruct {
-    isRequest () { return true; }
-    isResponse () { return false; }
+    static IS_REQUEST			= true;
+    static IS_RESPONSE			= false;
+    isRequest () { return this.constructor.IS_REQUEST; }
+    isResponse () { return this.constructor.IS_RESPONSE; }
 };
 class LairResponse extends LairStruct {
-    isRequest () { return false; }
-    isResponse () { return true; }
+    static IS_REQUEST			= false;
+    static IS_RESPONSE			= true;
+    isRequest () { return this.constructor.IS_REQUEST; }
+    isResponse () { return this.constructor.IS_RESPONSE; }
 };
 
 // Unlock Passphrase
@@ -288,11 +293,7 @@ class Ed25519SignByPublicKeyResponse extends LairResponse {
     static PAYLOAD			= [ LairSignature ];
 }
 
-
-module.exports = {
-    LairStruct,
-
-    // Wire Types
+const ALL_WIRETYPE_CLASSES		= {
     UnlockPassphraseRequest,
     UnlockPassphraseResponse,
 
@@ -329,6 +330,32 @@ module.exports = {
     TLSGetCertPrivateKeyBySNIRequest,
     TLSGetCertPrivateKeyBySNIResponse,
 
+    Ed25519CreateKeyRequest,
+    Ed25519CreateKeyResponse,
+
+    Ed25519GetKeyByIndexRequest,
+    Ed25519GetKeyByIndexResponse,
+
+    Ed25519SignByIndexRequest,
+    Ed25519SignByIndexResponse,
+
+    Ed25519SignByPublicKeyRequest,
+    Ed25519SignByPublicKeyResponse,
+};
+const ALL_WIRETYPES			= Object.values( ALL_WIRETYPE_CLASSES ).reduce(function (obj, cls) {
+    obj[cls.WIRE_TYPE]			= cls;
+    return obj;
+}, {} );
+
+module.exports = {
+    LairStruct,
+    LairRequest,
+    LairResponse,
+
+    // Wire Types
+    ...ALL_WIRETYPE_CLASSES,
+    ...ALL_WIRETYPES,
+
     "TLS": {
 	"CreateCert": {
 	    "Request":  TLSCreateCertRequest,
@@ -363,18 +390,6 @@ module.exports = {
 	    "Response": TLSGetCertPrivateKeyBySNIResponse,
 	},
     },
-
-    Ed25519CreateKeyRequest,
-    Ed25519CreateKeyResponse,
-
-    Ed25519GetKeyByIndexRequest,
-    Ed25519GetKeyByIndexResponse,
-
-    Ed25519SignByIndexRequest,
-    Ed25519SignByIndexResponse,
-
-    Ed25519SignByPublicKeyRequest,
-    Ed25519SignByPublicKeyResponse,
 
     "Ed25519": {
 	"CreateKey": {

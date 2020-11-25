@@ -38,7 +38,7 @@ function parser_tests () {
 	parser.write( Buffer.from( full_msg, "hex" ) );
 
 	for await ( let header of parser ) {
-	    expect( header.wire_type		).to.equal( 4278190096 );
+	    expect( header.wire_type_id		).to.equal( 4278190096 );
 	    expect( await header.payload()	).to.have.length( 240 );
 
 	    parser.stop();
@@ -56,7 +56,7 @@ function parser_tests () {
 		continue;
 	    }
 
-	    expect( header.wire_type		).to.equal( 4278190096 );
+	    expect( header.wire_type_id		).to.equal( 4278190096 );
 	    expect( await header.payload()	).to.have.length( 240 );
 
 	    parser.stop();
@@ -75,7 +75,7 @@ function parser_tests () {
 		continue;
 	    }
 
-	    expect( header.wire_type		).to.equal( 4278190096 );
+	    expect( header.wire_type_id		).to.equal( 4278190096 );
 	    expect( await header.payload()	).to.have.length( 240 );
 
 	    parser.stop();
@@ -103,7 +103,7 @@ function parser_tests () {
 	    count++;
 
 	    if ( count === 1 ) {
-		expect( header.wire_type		).to.equal( 4278190096 );
+		expect( header.wire_type_id		).to.equal( 4278190096 );
 		expect( await header.payload()		).to.have.length( 240 );
 		continue;
 	    }
@@ -131,7 +131,7 @@ function parser_tests () {
 	    count++;
 
 	    if ( count === 1 ) {
-		expect( header.wire_type	).to.equal( 4278190096 );
+		expect( header.wire_type_id	).to.equal( 4278190096 );
 		expect( await header.payload()	).to.have.length( 16 );
 		continue;
 	    }
