@@ -1,6 +1,6 @@
 const path				= require('path');
 const log				= require('@whi/stdlog')(path.basename( __filename ), {
-    level: process.env.LOG_LEVEL || 'fatal',
+    level: (!__dirname.includes("/node_modules/") && process.env.LOG_LEVEL ) || 'fatal',
 });
 
 const why				= require('why-is-node-running');
@@ -23,9 +23,13 @@ const { ConversionError,
 	// LairCertAlgorithm,
 	// LairCertPrivateKey,
 	...types }			= require('./types.js');
-const { LairRequest, ...structs }	= require('./structs.js');
+const { ...structs }			= require('./structs.js');
 const { MessageParser }			= require('./parser.js');
+const { LairClientError }		= require('./constants.js');;
 
+class TimeoutError extends LairClientError {
+    [Symbol.toStringTag]		= TimeoutError.name;
+}
 
 
 class LairClient extends EventEmitter {
@@ -65,7 +69,14 @@ class LairClient extends EventEmitter {
 		}
 
 		// If there are listeners, parse message and emit, otherwise discard message.
-		let bytes			= await req.payload();
+		let event_name		= req.wire_type.slice(0,-7);
+		if ( this.listeners( event_name ).length > 0 ) {
+		    let request		= req.wire_type_class.from( await req.payload() );
+
+		    this.emit( event_name, [req, request] );
+		} else {
+		    log.warn("Discarding message %s (%s) with ID %s", req.wire_type, req.wire_type_id, req.id );
+		}
 	    } catch ( err ) {
 		console.error( err );
 		this.emit("error", err);
@@ -83,11 +94,22 @@ class LairClient extends EventEmitter {
 	return obj;
     }, {});
 
-    request ( wiretype ) {
+    request ( wiretype, timeout = null ) {
 	let buf				= wiretype.toMessage();
 	let mid				= buf.message_id;
 	return new Promise((f,r) => {
-	    this._sent_requests[ mid ]	= [f,r];
+	    let toid;
+	    if ( timeout !== null ) {
+		toid			= setTimeout(() => {
+		    r( new TimeoutError(`Did not receive a response within ${timeout/1000}s for request ${mid}`) );
+		}, timeout );
+	    }
+
+	    this._sent_requests[ mid ]	= [(v) => {
+		if ( toid )
+		    clearTimeout( toid );
+		return f(v);
+	    }, r];
 	    this.send( buf );
 	});
     }
@@ -128,4 +150,14 @@ async function connect ( address ) {
 
 module.exports = {
     connect,
+
+    MessageParser,
+    LairClient,
+    structs,
+    types,
+
+    // Error types
+    LairClientError,
+    TimeoutError,
+    ConversionError,
 };

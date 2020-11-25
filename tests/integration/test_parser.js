@@ -15,25 +15,38 @@ function parse_tests () {
 	const client			= await lair.connect( LAIR_SOCKETFILE );
 
 	try {
+	    let recv_unlock		= false;
+	    client.on('UnlockPassphrase', ([ header, UnlockPassphraseRequest ]) => {
+		log.normal("Received unlock passphrase request (%s): %s", UnlockPassphraseRequest.constructor.WIRE_TYPE, header );
+		recv_unlock		= true;
+	    });
 	    let resp			= await client.request( new client.TLS.CreateCert( 512 ) );
 
-	    expect( resp.value(0)		).to.be.a('number');
-	    expect( resp.value(1)		).to.be.a('uint8array');
-	    expect( resp.value(2)		).to.be.a('uint8array');
+	    expect( resp.value(0)	).to.be.a('number');
+	    expect( resp.value(1)	).to.be.a('uint8array');
+	    expect( resp.value(2)	).to.be.a('uint8array');
+	    expect( recv_unlock		).to.be.true;
 	} finally {
 	    client.destroy();
 	}
     });
 
-    // it("should fail to parse JSON into error package", async () => {
-    // 	const invalid_error_msg		= JSON.stringify({
-    // 	    "type": "error",
-    // 	    "payload": null,
-    // 	});
-    // 	expect(() => {
-    // 	    hhdt.parse( invalid_error_msg );
-    // 	}				).to.throw( TypeError, "Value cannot be null or undefined" );
-    // });
+    it("should send garbage message and not receive a response", async () => {
+	const client			= await lair.connect( LAIR_SOCKETFILE );
+
+	let failed			= false;
+	try {
+	    await client.request({ toMessage: () => Buffer.from("Garbage message") }, 100 );
+	} catch ( err ) {
+	    expect( err.name		).to.equal('TimeoutError');
+	    expect( err.message		).to.have.string('within 0.1s for request');
+	    failed			= true;
+	} finally {
+	    client.destroy();
+	}
+
+	expect( failed			).to.be.true;
+    });
 }
 
 describe("Package", () => {
