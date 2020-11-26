@@ -10,18 +10,6 @@ const stream				= require('stream');
 const EventEmitter			= require('events');
 
 const { ConversionError,
-	// LairType,
-	// LairString,
-	// LairSized,
-	// LairPublicKey,
-	// LairSignature,
-	// LairKeystoreIndex,
-	// LairEntryType,
-	// LairDigest,
-	// LairCert,
-	// LairCertSNI,
-	// LairCertAlgorithm,
-	// LairCertPrivateKey,
 	...types }			= require('./types.js');
 const { ...structs }			= require('./structs.js');
 const { MessageParser }			= require('./parser.js');
@@ -42,8 +30,15 @@ class LairClient extends EventEmitter {
 	    console.error(data);
 	    process.exit(1);
 	});
+
+	let connected;
+	this._connect_promise		= new Promise((f,r) => {
+	    connected			= f;
+	});
 	conn.on('connect', () => {
-	    log.info("Connected to lair");
+	    log.silly("Emitting client 'connect' event because of socket 'connect' event");
+	    this.emit('connect');
+	    connected();
 	});
 
 	this.conn			= conn;
@@ -82,6 +77,10 @@ class LairClient extends EventEmitter {
 		this.emit("error", err);
 	    }
 	}
+    }
+
+    ready () {
+	return this._connect_promise;
     }
 
     send ( msg ) {
@@ -141,8 +140,11 @@ class LairClient extends EventEmitter {
 
 
 async function connect ( address ) {
-    log.normal("Connecting to lair.");
+    log.normal("Create new Lair client for address: %s", address );
     const client			= new LairClient( address );
+
+    await client.ready();
+    log.info("New Lair client is connected");
 
     return client;
 }

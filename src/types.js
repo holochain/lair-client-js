@@ -17,7 +17,7 @@ class ConversionError extends LairClientError {
 
 
 function assert_byte_size ( bytes, expected_length, constructor ) {
-    log.silly("Asserting that input (%s) has exactly %s bytes for type %s", () => [
+    log.debug("Asserting that input (%s) has exactly %s bytes for type %s", () => [
 	bytes.length, expected_length, constructor.name ]);
     if ( bytes.length > expected_length )
 	throw new ConversionError(`Too many bytes: ${constructor.name} expected ${expected_length} bytes but there are ${bytes.length} bytes available`);
@@ -205,7 +205,7 @@ class LairInteger extends LairType {
 	    src				= Buffer.allocUnsafe( this.SIZE );
 
 	    src.writeUInt32LE( n );
-	    log.silly("%s converted integer (%s) to bytes: %s", () => [
+	    log.debug("%s converted integer (%s) to bytes: %s", () => [
 		this.name, n, src.toString("hex") ]);
 	}
 	return super.from( src, strict );

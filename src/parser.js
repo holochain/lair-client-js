@@ -65,7 +65,7 @@ class MessageParser extends stream.Duplex {
 		this.need_more_buffer	= true;
 		break;
 	    }
-	    log.info("End of loop state: %s (more? %s)", this.state, this.need_more_buffer );
+	    log.silly("End of loop state: %s (more? %s)", this.state, this.need_more_buffer );
 	} while (this.need_more_buffer === false);
     }
 
@@ -130,7 +130,7 @@ class MessageParser extends stream.Duplex {
 	this.emit('header', this.current_msg );
 
 	this.state			= STATE_GET_PAYLOAD;
-	log.info("Change state to: %s", this.state );
+	log.silly("Change state to: %s", this.state );
     }
 
     parse_payload () {
