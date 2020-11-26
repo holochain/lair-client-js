@@ -16,10 +16,13 @@ function parse_tests () {
 
 	try {
 	    let recv_unlock		= false;
-	    client.on('UnlockPassphrase', ([ header, UnlockPassphraseRequest ]) => {
-		log.normal("Received unlock passphrase request (%s): %s", UnlockPassphraseRequest.constructor.WIRE_TYPE, header );
+	    client.on('UnlockPassphrase', request => {
+		log.normal("Received unlock passphrase request (%s): %s", request.wireTypeId, request.wireType );
 		recv_unlock		= true;
+		request.reply( "Passw0rd!" );
 	    });
+
+	    log.normal("Building TLS Create Cert Request");
 	    let resp			= await client.request( new client.TLS.CreateCert( 512 ) );
 
 	    expect( resp.value(0)	).to.be.a('number');

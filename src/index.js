@@ -20,6 +20,46 @@ class TimeoutError extends LairClientError {
 }
 
 
+class IncomingRequest {
+
+    constructor ( header, struct, client ) {
+	this._header			= header;
+	this._struct			= struct;
+	this.client			= client;
+    }
+
+    get id () {
+	return this._header.id;
+    }
+
+    get length () {
+	return this._header.length;
+    }
+
+    get wireType () {
+	return this._header.wire_type;
+    }
+
+    get wireTypeId () {
+	return this._header.wire_type_id;
+    }
+
+    get wireTypeStruct () {
+	return this._header.wire_type_class;
+    }
+
+    value ( ...args ) {
+	return this._struct.value( ...args );
+    }
+
+    reply ( ...args ) {
+	let Response			= structs[this.wireTypeId + 1];
+	let wt_resp			= new Response( ...args );
+	return this.client.send( wt_resp.toMessage( this.id ) );
+    }
+
+}
+
 class LairClient extends EventEmitter {
 
     constructor ( address, options ) {
@@ -68,7 +108,7 @@ class LairClient extends EventEmitter {
 		if ( this.listeners( event_name ).length > 0 ) {
 		    let request		= req.wire_type_class.from( await req.payload() );
 
-		    this.emit( event_name, [req, request] );
+		    this.emit( event_name, new IncomingRequest( req, request, this ) );
 		} else {
 		    log.warn("Discarding message %s (%s) with ID %s", req.wire_type, req.wire_type_id, req.id );
 		}
@@ -109,6 +149,8 @@ class LairClient extends EventEmitter {
 		    clearTimeout( toid );
 		return f(v);
 	    }, r];
+
+	    log.debug("Sending %s request (%s bytes) with ID (%s)", wiretype.constructor.name, buf.length, mid );
 	    this.send( buf );
 	});
     }
