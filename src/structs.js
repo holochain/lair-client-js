@@ -24,7 +24,7 @@ const {
 }					= require('./types.js');
 
 
-class LairStruct extends Array {
+class LairStruct {
     [Symbol.toStringTag]		= LairStruct.name;
 
     static from ( source, has_header_prefix = false ) {
@@ -53,31 +53,47 @@ class LairStruct extends Array {
     }
 
     constructor ( ...args ) {
-	super();
+	this.max_length			= this.constructor.PAYLOAD.length;
 
-	if ( this.constructor.PAYLOAD.length < args.length )
+	if ( this.max_length < args.length )
 	    throw new ConversionError(`Received more arguments (${args.length}) than template allows for ${this.name}`);
 
-	this.byteLength			= HEADER_SIZE;
-	for (let i=0; i < args.length; i++) {
-	    let type			= this.constructor.PAYLOAD[i];
-	    let value			= type.from( args[i] );
+	this._values			= new Array(this.max_length);
+	this.constructor.PAYLOAD.map( (type, i) => {
+	    Object.defineProperty( this, i, {
+		get () {
+		    return this._values[i];
+		},
+		set ( value ) {
+		    if ( this._values[i] !== undefined )
+			this.byteLength -= this._values[i].length;
 
-	    log.silly("Adding '%s' (%s) to satisfy PAYLOAD item %s (%s)", () => [
-		value.constructor.name, value.length, i, type.name ]);
-	    this.push( value );
-	}
+		    if ( !(value instanceof LairType) )
+			value		= type.from( value );
+
+		    log.silly("Setting '%s' (%s bytes) to satisfy PAYLOAD item %s (%s)", () => [
+			i, value.length, type.name, type.SIZE ]);
+		    this._values[i]	= value;
+		    this.byteLength    += value.length;
+		},
+	    });
+	});
+
+	this.byteLength			= HEADER_SIZE;
+	args.map( value => this.push(value) );
     }
 
     push ( value ) {
-	if ( !(value instanceof LairType) )
-	    throw new TypeError(`Structs can only contain LairType objects, not '${value.constructor.name}'`);
+	let i				= this._values.filter(Boolean).length;
 
-	if ( this.length === this.constructor.PAYLOAD.length )
+	if ( i === this.max_length )
 	    throw new Error(`Cannot push another item onto ${this.constructor.name} because it already contains the expected number of payoad items.`);
 
-	this.byteLength		       += value.length;
-	return super.push( ...arguments );
+	log.silly("Pushing '%s' (%s) to satisfy PAYLOAD item %s", () => [
+	    value.constructor.name, typeof value, i ]);
+	this[i]				= value;
+
+	return i + 1;
     }
 
     toMessage ( msg_id ) {
@@ -99,7 +115,7 @@ class LairStruct extends Array {
 	log.debug("%s request message header bytes: %s", () => [
 	    this.constructor.name, buf.view.slice(0, HEADER_SIZE).toString("hex") ] );
 	let position			= HEADER_SIZE;
-	for ( let value of this ) {
+	for ( let value of this._values ) {
 	    log.silly("%s request setting '%s' at position (%s): %s", () => [
 		this.constructor.name, value.constructor.name, position, value.view.toString("hex") ] );
 	    buf.set( value, position );
@@ -111,12 +127,22 @@ class LairStruct extends Array {
 	return buf;
     }
 
-    value ( index ) {
-	let type			= this[index];
+    get ( index ) {
+	if ( !(index < this.max_length) )
+	    throw new RangeError(`The index must be between 0..${this.max_length-1}; not ${index}`);
+
+	let type			= this._values[index];
 	if ( type instanceof LairType )
 	    return type.value();
 	else
 	    return null;
+    }
+
+    set ( index, value ) {
+	if ( !(index < this.max_length) )
+	    throw new RangeError(`The index must be between 0..${this.max_length-1}; not ${index}`);
+
+	this[index]			= value;
     }
 }
 
@@ -347,6 +373,7 @@ const ALL_WIRETYPES			= Object.values( ALL_WIRETYPE_CLASSES ).reduce(function (o
     return obj;
 }, {} );
 
+
 module.exports = {
     LairStruct,
     LairRequest,
@@ -355,6 +382,23 @@ module.exports = {
     // Wire Types
     ...ALL_WIRETYPE_CLASSES,
     ...ALL_WIRETYPES,
+
+    "UnlockPassphrase": {
+	"Request":  UnlockPassphraseRequest,
+	"Response": UnlockPassphraseResponse,
+    },
+    "GetLastEntry": {
+	"Request":  GetLastEntryRequest,
+	"Response": GetLastEntryResponse,
+    },
+    "GetEntryType": {
+	"Request":  GetEntryTypeRequest,
+	"Response": GetEntryTypeResponse,
+    },
+    "GetServerInfo": {
+	"Request":  GetServerInfoRequest,
+	"Response": GetServerInfoResponse,
+    },
 
     "TLS": {
 	"CreateCert": {

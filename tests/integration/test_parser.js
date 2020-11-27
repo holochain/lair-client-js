@@ -4,7 +4,7 @@ const log				= require('@whi/stdlog')(path.basename( __filename ), {
 });
 
 const expect				= require('chai').expect;
-const lair				= require('../../src/index.js');
+const { structs, ...lair }		= require('../../src/index.js');
 
 const LAIR_SOCKETFILE			= './lair/socket';
 
@@ -23,11 +23,11 @@ function parse_tests () {
 	    });
 
 	    log.normal("Building TLS Create Cert Request");
-	    let resp			= await client.request( new client.TLS.CreateCert( 512 ) );
+	    let resp			= await client.request( new structs.TLS.CreateCert.Request( 512 ) );
 
-	    expect( resp.value(0)	).to.be.a('number');
-	    expect( resp.value(1)	).to.be.a('uint8array');
-	    expect( resp.value(2)	).to.be.a('uint8array');
+	    expect( resp.get(0)		).to.be.a('number');
+	    expect( resp.get(1)		).to.be.a('uint8array');
+	    expect( resp.get(2)		).to.be.a('uint8array');
 	    expect( recv_unlock		).to.be.true;
 	} finally {
 	    client.destroy();

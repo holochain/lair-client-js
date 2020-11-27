@@ -38,7 +38,7 @@ function structs_tests () {
 
 	expect( struct.byteLength	).to.equal( 33 );
 	expect( struct[0]		).to.be.a("LairType");
-	expect( struct.value(0)		).to.equal( passphrase );
+	expect( struct.get(0)		).to.equal( passphrase );
 
 	expect(() => {
 	    UnlockPassphraseResponse.from( bytes.slice( 16, 20 ) );
@@ -61,13 +61,22 @@ function structs_tests () {
 	let bytes			= wiretype.toMessage( 1 );
 	expect( bytes.toHex()		).to.equal( compress("4c000000310000000100000000000000 1f00000000000000 4c616972204b657973746f7265202d205369676e696e672053657276696365 0d00000000000000 76302e312e302d636f6f6c696f") );
 
+	wiretype[0]			= "Change Server Name";
+	expect( wiretype.byteLength	).to.equal( 63 );
+
+	wiretype.set(0, "Change Server Name Again");
+	expect( wiretype.byteLength	).to.equal( 69 );
+
+	expect(() => {
+	    wiretype.set(2, "out of range");
+	}).to.throw("index must be between 0..1", RangeError);
 
 	let struct			= GetServerInfoResponse.from( bytes, true );;
 
 	expect( struct.byteLength	).to.equal( 76 );
 	expect( struct[0]		).to.be.a("LairType");
-	expect( struct.value(0)		).to.equal( name );
-	expect( struct.value(1)		).to.equal( version );
+	expect( struct.get(0)		).to.equal( name );
+	expect( struct.get(1)		).to.equal( version );
 
 	expect(() => {
 	    GetServerInfoResponse.from( bytes.slice( 16, 20 ) );
@@ -96,9 +105,9 @@ function structs_tests () {
 
 	expect( struct.byteLength		).to.equal( 83 );
 	expect( struct[0]			).to.be.a("LairType");
-	expect( struct.value(0)			).to.equal( keystore_index );
-	expect( struct.value(1).toString("hex")	).to.equal( cert_sni.toString("hex") );
-	expect( struct.value(2).toString("hex")	).to.equal( digest.toString("hex") );
+	expect( struct.get(0)			).to.equal( keystore_index );
+	expect( struct.get(1).toString("hex")	).to.equal( cert_sni.toString("hex") );
+	expect( struct.get(2).toString("hex")	).to.equal( digest.toString("hex") );
     });
 
     it("should encode/decode wire type 'Sign by Public Key Request (576)'", async () => {
@@ -119,8 +128,8 @@ function structs_tests () {
 	expect( struct.byteLength		).to.equal( 96 );
 	expect( struct[0].toHex()		).to.equal( pub_key.toString("hex") );
 	expect( struct[1].toHex()		).to.equal( "2800000000000000" + message.toString("hex") );
-	expect( struct.value(0).toString("hex")	).to.equal( pub_key.toString("hex") );
-	expect( struct.value(1).toString("hex")	).to.equal( message.toString("hex") );
+	expect( struct.get(0).toString("hex")	).to.equal( pub_key.toString("hex") );
+	expect( struct.get(1).toString("hex")	).to.equal( message.toString("hex") );
 
 	expect(() => {
 	    struct.push( new LairType(0) );
@@ -142,7 +151,7 @@ function structs_tests () {
 	let struct			= Ed25519SignByPublicKeyResponse.from( bytes, true );;
 
 	expect( struct.byteLength		).to.equal( 80 );
-	expect( struct.value(0).toString("hex")	).to.equal( signature.toString("hex") );
+	expect( struct.get(0).toString("hex")	).to.equal( signature.toString("hex") );
     });
 }
 

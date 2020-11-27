@@ -55,7 +55,9 @@ class IncomingRequest {
     reply ( ...args ) {
 	let Response			= structs[this.wireTypeId + 1];
 	let wt_resp			= new Response( ...args );
-	return this.client.send( wt_resp.toMessage( this.id ) );
+	let buf				= wt_resp.toMessage( this.id );
+	log.debug("Sending %s response (%s bytes) with ID (%s)", wt_resp.constructor.name, buf.length, this.id );
+	return this.client.send( buf );
     }
 
 }
@@ -127,12 +129,6 @@ class LairClient extends EventEmitter {
 	return this.conn.write( msg );
     }
 
-    TLS					= Object.keys( structs.TLS ).reduce(function (obj, name) {
-	let { Request, _ }		= structs.TLS[name];
-	obj[name]			= Request;
-	return obj;
-    }, {});
-
     request ( wiretype, timeout = null ) {
 	let buf				= wiretype.toMessage();
 	let mid				= buf.message_id;
@@ -194,9 +190,11 @@ async function connect ( address ) {
 
 module.exports = {
     connect,
-
-    MessageParser,
     LairClient,
+    IncomingRequest,
+
+    // Submodules
+    MessageParser,
     structs,
     types,
 
