@@ -33,6 +33,12 @@ test-integration:	test-setup
 test-integration-debug:	test-setup
 	LOG_LEVEL=silly npx mocha ./tests/integration
 
+lair-fixed.log:		lair.log
+	sed 's/\x1b\[2mNov 27 08/2020-11-27T15/' lair.log > lair-fixed.log # change dates to work
+read-logs:		lair-fixed.log
+	cat test.log lair-fixed.log | sort > merged.log
+	less -R merged.log
+
 
 #
 # Repository

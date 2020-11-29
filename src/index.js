@@ -3,7 +3,7 @@ const log				= require('@whi/stdlog')(path.basename( __filename ), {
     level: (!__dirname.includes("/node_modules/") && process.env.LOG_LEVEL ) || 'fatal',
 });
 
-const why				= require('why-is-node-running');
+// const why				= require('why-is-node-running');
 const net				= require('net');
 const fs				= require('fs');
 const stream				= require('stream');
@@ -48,10 +48,6 @@ class IncomingRequest {
 	return this._header.wire_type_class;
     }
 
-    value ( ...args ) {
-	return this._struct.value( ...args );
-    }
-
     reply ( ...args ) {
 	let Response			= structs[this.wireTypeId + 1];
 	let wt_resp			= new Response( ...args );
@@ -89,10 +85,10 @@ class LairClient extends EventEmitter {
 	conn.pipe( this.parser );
 
 	this._sent_requests		= {};
-	this.startReceiver();
+	this._startReceiver();
     }
 
-    async startReceiver () {
+    async _startReceiver () {
 	for await ( let req of this.parser ) {
 	    if ( req === null )
 		continue;
@@ -101,7 +97,7 @@ class LairClient extends EventEmitter {
 		log.normal("Received message: %s => %s", req, req.wire_type_class.IS_RESPONSE );
 
 		if ( req.wire_type_class.IS_RESPONSE === true ) {
-		    this.response( req );
+		    this._response( req );
 		    continue;
 		}
 
@@ -151,7 +147,7 @@ class LairClient extends EventEmitter {
 	});
     }
 
-    response ( req ) {
+    _response ( req ) {
 	let mid				= req.id;
 	let promise			= this._sent_requests[ mid ];
 	if ( promise === undefined )

@@ -44,22 +44,22 @@ class MessageParser extends stream.Duplex {
 	this._buffers.push( buf );
 	this.need_more_buffer		= false;
 
-	this.processBuffers().catch(console.error);
+	this._processBuffers().catch(console.error);
 
 	return cb() || true;
     }
 
-    async processBuffers () {
+    async _processBuffers () {
 	await delay(0);
 
 	do {
 	    log.silly("State maching loop: %s (%s bytes avaiable)", this.state, this._bufferedBytes );
 	    switch ( this.state ) {
 	    case STATE_GET_HEADER:
-		this.parse_header();
+		this._parseHeader();
 		break;
 	    case STATE_GET_PAYLOAD:
-		this.parse_payload();
+		this._parsePayload();
 		break;
 	    default:
 		this.need_more_buffer	= true;
@@ -69,7 +69,7 @@ class MessageParser extends stream.Duplex {
 	} while (this.need_more_buffer === false);
     }
 
-    consume ( n ) {
+    _consume ( n ) {
 	this._bufferedBytes	       -= n;
 
 	if ( n === this._buffers[0].length )
@@ -100,14 +100,14 @@ class MessageParser extends stream.Duplex {
 	return dst;
     }
 
-    parse_header () {
+    _parseHeader () {
 	if ( this._bufferedBytes < HEADER_SIZE ) {
 	    this.need_more_buffer	= true;
 	    return;
 	}
 	log.info("Parsing (%s) header from %s available bytes", HEADER_SIZE, this._bufferedBytes );
 
-	let header_bytes		= this.consume( HEADER_SIZE );
+	let header_bytes		= this._consume( HEADER_SIZE );
 
 	let payload_promise		= new Promise((f,r) => {
 	    this.next_payload		= payload => {
@@ -133,14 +133,14 @@ class MessageParser extends stream.Duplex {
 	log.silly("Change state to: %s", this.state );
     }
 
-    parse_payload () {
+    _parsePayload () {
 	if ( this._bufferedBytes < this.current_msg.length ) {
 	    this.need_more_buffer	= true;
 	    return;
 	}
 	log.info("Parsing (%s) payload from %s available bytes", this.current_msg.length, this._bufferedBytes );
 
-	let payload_bytes		= this.consume( this.current_msg.length );
+	let payload_bytes		= this._consume( this.current_msg.length );
 
 	this.emit('payload', payload_bytes );
 	this.next_payload( payload_bytes );

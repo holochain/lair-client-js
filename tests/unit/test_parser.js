@@ -24,7 +24,7 @@ const rest_of_payload			= "7faae00ea2cacb27ba07d10ecb231c16672c0246af177da578ae5
 function pipe_input_to_parser ( chunks, parser, interval = 10 ) {
     const iid			= setInterval(() => {
 	log.info("Chunks remaining for parser: %s", chunks.length );
-	parser.write(  Buffer.from(chunks.shift(), "hex") );
+	parser.write( Buffer.from(chunks.shift(), "hex") );
 
 	if ( chunks.length === 0 )
 	    clearInterval( iid );
@@ -38,10 +38,13 @@ function parser_tests () {
 	parser.write( Buffer.from( full_msg, "hex" ) );
 
 	for await ( let header of parser ) {
+	    if ( header === null )
+		throw new Error(`Parser should not get the opportunity for interval checks`);
+
 	    expect( header.wire_type_id		).to.equal( 4278190096 );
 	    expect( await header.payload()	).to.have.length( 240 );
 
-	    parser.stop();
+	    break;
 	}
     });
 
@@ -51,15 +54,13 @@ function parser_tests () {
 	pipe_input_to_parser( chunks, parser );
 
 	for await ( let header of parser ) {
-	    if ( header === null ) {
-		parser.write( chunks.shift() );
-		continue;
-	    }
+	    if ( header === null )
+		throw new Error(`Parser should not get the opportunity for interval checks`);
 
 	    expect( header.wire_type_id		).to.equal( 4278190096 );
 	    expect( await header.payload()	).to.have.length( 240 );
 
-	    parser.stop();
+	    break;
 	}
     });
 
@@ -69,16 +70,13 @@ function parser_tests () {
 	pipe_input_to_parser( chunks, parser );
 
 	for await ( let header of parser ) {
-	    if ( header === null ) {
-		expect( chunks.length		).to.be.gt( 0 );
-		parser.write( chunks.shift() );
-		continue;
-	    }
+	    if ( header === null )
+		throw new Error(`Parser should not get the opportunity for interval checks`);
 
 	    expect( header.wire_type_id		).to.equal( 4278190096 );
 	    expect( await header.payload()	).to.have.length( 240 );
 
-	    parser.stop();
+	    break;
 	}
     });
 
@@ -96,9 +94,8 @@ function parser_tests () {
 
 	let count			= 0;
 	for await ( let header of parser ) {
-	    if ( header === null ) {
-		continue;
-	    }
+	    if ( header === null )
+		throw new Error(`Parser should not get the opportunity for interval checks`);
 
 	    count++;
 
@@ -110,7 +107,7 @@ function parser_tests () {
 
 	    expect( await header.payload()		).to.have.length( 16 );
 
-	    parser.stop();
+	    break;
 	}
     });
 
@@ -126,7 +123,7 @@ function parser_tests () {
 	let count			= 0;
 	for await ( let header of parser ) {
 	    if ( header === null )
-		throw new Error(`should not get here`);
+		throw new Error(`Parser should not get the opportunity for interval checks`);
 
 	    count++;
 
@@ -138,7 +135,7 @@ function parser_tests () {
 
 	    expect( await header.payload()	).to.have.length( 16 );
 
-	    parser.stop();
+	    break;
 	}
     });
 }
