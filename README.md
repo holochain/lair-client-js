@@ -23,7 +23,7 @@ This module provides APIs for
 const { structs, ...lair } = require("@holo-host/lair-client");
 
 (async () {
-    const client = lair_client.connect( <path to a Lair unix domain socket> );
+    const client = lair.connect( <path to a Lair unix domain socket> );
 
     client.on('UnlockPassphrase', request => {
 	req.reply( "Passw0rd!" );
