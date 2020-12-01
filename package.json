@@ -14,7 +14,7 @@
     "Matthew Brisebois <matthew.brisebois@holo.host>",
     "Zippy <eric@holo.host>"
   ],
-  "license": "ISC",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/Holo-Host/lair-client-js"
