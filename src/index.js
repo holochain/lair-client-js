@@ -86,6 +86,8 @@ class LairClient extends EventEmitter {
 
 	this._sent_requests		= {};
 	this._startReceiver();
+
+	this.message_id_counter		= 0;
     }
 
     async _startReceiver () {
@@ -94,7 +96,9 @@ class LairClient extends EventEmitter {
 		continue;
 
 	    try {
-		log.normal("Received message: %s => %s", req, req.wire_type_class.IS_RESPONSE );
+		log.normal("Received %s message: %s<%s> #%s -> %s byte payload", () => [
+		    req.wire_type_class.IS_RESPONSE ? "response" : "request",
+		    req.wire_type, req.wire_type_id, req.id, req.length ]);
 
 		if ( req.wire_type_class.IS_RESPONSE === true ) {
 		    this._response( req );
@@ -126,7 +130,7 @@ class LairClient extends EventEmitter {
     }
 
     request ( wiretype, timeout = null ) {
-	let buf				= wiretype.toMessage();
+	let buf				= wiretype.toMessage( this.message_id_counter++ );
 	let mid				= buf.message_id;
 	return new Promise((f,r) => {
 	    let toid;

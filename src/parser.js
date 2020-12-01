@@ -123,7 +123,7 @@ class MessageParser extends stream.Duplex {
 	    "wire_type":	wt_cls.name,
 	    "wire_type_id":	wt_id,
 	    "wire_type_class":	wt_cls,
-	    "id":		parseInt( header_bytes.readBigUInt64LE(8) ),
+	    "id":		header_bytes.readBigUInt64LE(8),
 	    "payload":		() => payload_promise,
 	};
 
@@ -160,7 +160,8 @@ class MessageParser extends stream.Duplex {
 	let parsed_headers		= [];
 	let nextHeader			= null;
 	this.on('header', header => {
-	    log.normal("Parsed a new header: %s", header );
+	    log.info("Parsed a new header: %s<%s> #%s -> %s byte payload", () => [
+		header.wire_type, header.wire_type_id, header.id, header.length ]);
 	    if ( nextHeader === null )
 		parsed_headers.push( header );
 	    else

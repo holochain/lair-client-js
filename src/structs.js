@@ -97,13 +97,8 @@ class LairStruct {
     }
 
     toMessage ( msg_id ) {
-	if (msg_id === undefined) {
-	    if ( this instanceof LairResponse )
-		throw new TypeError(`Message ID must be provided for Lair responses`);
-	    else
-		msg_id			= Math.floor(Math.random() * 2**32);
-	    log.normal("Automatically assigned message ID (%s) to %s request",  msg_id, this.constructor.name );
-	}
+	if (msg_id === undefined)
+	    throw new TypeError(`Message ID must be provided for Lair message building`);
 
 	let buf				= new LairType( this.byteLength );
 	buf.message_id			= msg_id;
