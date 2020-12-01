@@ -28,7 +28,7 @@ Close the connection and stop the message parser.
 
 
 ## `new IncomingRequest( header, struct, client )`
-A read-only object for inspecing requests and sending a reply.
+A read-only object for inspecting requests and sending a reply.
 
 #### Read-only values
 
