@@ -1,49 +1,51 @@
-# lair-shim
+[![](https://img.shields.io/npm/v/@holo-host/lair-client/latest?style=flat-square)](http://npmjs.com/package/@holo-host/lair-client)
+[![](https://img.shields.io/github/workflow/status/holo-host/lair-client-js/Node.js%20CI/master?style=flat-square&label=master)](https://github.com/holo-host/lair-client-js)
 
-nodejs based shim to route signing requests to lair/wormhole proof-of-concept
+# Lair Client for Node.js
+Javascript implementation of client for Lair Keystore.
 
 
-## Usage
+[![](https://img.shields.io/github/issues-raw/holo-host/lair-client-js?style=flat-square)](https://github.com/holo-host/lair-client-js/issues)
+[![](https://img.shields.io/github/issues-closed-raw/holo-host/lair-client-js?style=flat-square)](https://github.com/holo-host/lair-client-js/issues?q=is%3Aissue+is%3Aclosed)
+[![](https://img.shields.io/github/issues-pr-raw/holo-host/lair-client-js?style=flat-square)](https://github.com/holo-host/lair-client-js/pulls)
 
-1. Launch lair in a terminal like this:
+## Overview
+This module provides APIs for
 
+- connecting to Lair
+- receiving and responding to messages
+- sending requests and awaiting response
+- constructing messages using wire type structs
+
+### Basic Usage
+
+```javascript
+const { structs, ...lair } = require("@holo-host/lair-client");
+
+(async () {
+    const client = lair.connect( <path to a Lair unix domain socket> );
+
+    client.on('UnlockPassphrase', request => {
+	req.reply( "Passw0rd!" );
+    });
+
+    let resp = await client.request( new structs.TLS.CreateCert( 512 ) );
+
+    resp[0];     // LairType  -> LairKeystoreIndex<Uint8Array>
+    resp.get(0); // number    -> <LairType>.value()
+
+    resp[1];     // LairType  -> LairCertSNI<Uint8Array>
+    resp.get(1); // Buffer    -> <LairType>.value()
+
+    resp[2];     // LairType  -> LairDigest<Uint8Array>
+    resp.get(2); // Buffer    -> <LairType>.value()
+})();
 ```
-RUST_LOG=debug lair-keystore -d /tmp/lair
-```
 
-2. Fire up the the shim:
+### API Reference
 
-```
-$ node lair-shim.js
-```
-You should see:
+See [docs/API.md](docs/API.md)
 
-```
-Checking for leftover socket.
-No leftover socket found.
-Creating shim server.
-```
+### Contributing
 
-3. Fire up the fake holochain:
-
-```
-$ node fake-holochain.js
-```
-You should see:
-
-```
-Connecting to shim.
-Connected to shim
-got messageID ff000010 from shim
-```
-
-and on the shim terminal you should see:
-
-```
-Connection acknowledged.
-Shim Client connected.
-Creating sub-client connection to lair.
-Connecting to lair.
-Connected to lair
-got messageID ff000010 from lair passing back through shim
-```
+See [CONTRIBUTING.md](CONTRIBUTING.md)
