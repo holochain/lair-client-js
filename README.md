@@ -1,5 +1,5 @@
 [![](https://img.shields.io/npm/v/@holo-host/lair-client/latest?style=flat-square)](http://npmjs.com/package/@holo-host/lair-client)
-[![](https://img.shields.io/github/workflow/status/holo-host/lair-client-js/Node.js%20CI/master?style=flat-square&label=master)](https://github.com/holo-host/lair-client-js)
+[![](https://img.shields.io/github/workflow/status/holo-host/lair-client-js/Node.js%20CI/main?style=flat-square&label=main)](https://github.com/holo-host/lair-client-js)
 
 # Lair Client for Node.js
 Javascript implementation of client for Lair Keystore.
