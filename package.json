@@ -28,7 +28,7 @@
     "src/constants.js"
   ],
   "dependencies": {
-    "@whi/stdlog": "^0.3.3"
+    "@whi/stdlog": "^0.3.4"
   },
   "devDependencies": {
     "chai": "^4.2.0",
