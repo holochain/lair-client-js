@@ -1,7 +1,7 @@
 [back to README.md](README.md)
 
 # Contributing
-[![](https://img.shields.io/github/workflow/status/holo-host/lair-client-js/Node.js%20CI/develop?style=flat-square&label=develop)](https://github.com/holo-host/lair-client-js)
+[![](https://img.shields.io/github/workflow/status/holochain/lair-client-js/Node.js%20CI/develop?style=flat-square&label=develop)](https://github.com/holochain/lair-client-js)
 
 ## Overview
 Implementation is based on the Lair protocol documented at https://github.com/holochain/lair/blob/master/docs/protocol.md

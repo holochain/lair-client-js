@@ -1,6 +1,6 @@
 
 const $TYPE				= Symbol.for("type");
-const $LAIRCLIENT			= Symbol.for("@holo-host/lair-client");
+const $LAIRCLIENT			= Symbol.for("@holochain/lair-client");
 
 const MSG_LEN_SIZE			= 4;
 const WIRE_TYPE_SIZE			= 4;

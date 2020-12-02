@@ -1,13 +1,13 @@
-[![](https://img.shields.io/npm/v/@holo-host/lair-client/latest?style=flat-square)](http://npmjs.com/package/@holo-host/lair-client)
-[![](https://img.shields.io/github/workflow/status/holo-host/lair-client-js/Node.js%20CI/main?style=flat-square&label=main)](https://github.com/holo-host/lair-client-js)
+[![](https://img.shields.io/npm/v/@holochain/lair-client/latest?style=flat-square)](http://npmjs.com/package/@holochain/lair-client)
+[![](https://img.shields.io/github/workflow/status/holochain/lair-client-js/Node.js%20CI/main?style=flat-square&label=main)](https://github.com/holochain/lair-client-js)
 
 # Lair Client for Node.js
 Javascript implementation of client for Lair Keystore.
 
 
-[![](https://img.shields.io/github/issues-raw/holo-host/lair-client-js?style=flat-square)](https://github.com/holo-host/lair-client-js/issues)
-[![](https://img.shields.io/github/issues-closed-raw/holo-host/lair-client-js?style=flat-square)](https://github.com/holo-host/lair-client-js/issues?q=is%3Aissue+is%3Aclosed)
-[![](https://img.shields.io/github/issues-pr-raw/holo-host/lair-client-js?style=flat-square)](https://github.com/holo-host/lair-client-js/pulls)
+[![](https://img.shields.io/github/issues-raw/holochain/lair-client-js?style=flat-square)](https://github.com/holochain/lair-client-js/issues)
+[![](https://img.shields.io/github/issues-closed-raw/holochain/lair-client-js?style=flat-square)](https://github.com/holochain/lair-client-js/issues?q=is%3Aissue+is%3Aclosed)
+[![](https://img.shields.io/github/issues-pr-raw/holochain/lair-client-js?style=flat-square)](https://github.com/holochain/lair-client-js/pulls)
 
 ## Overview
 This module provides APIs for
@@ -20,7 +20,7 @@ This module provides APIs for
 ### Basic Usage
 
 ```javascript
-const { structs, ...lair } = require("@holo-host/lair-client");
+const { structs, ...lair } = require("@holochain/lair-client");
 
 (async () {
     const client = lair.connect( <path to a Lair unix domain socket> );
