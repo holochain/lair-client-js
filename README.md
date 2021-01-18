@@ -25,11 +25,11 @@ const { structs, ...lair } = require("@holochain/lair-client");
 (async () {
     const client = lair.connect( <path to a Lair unix domain socket> );
 
-    client.on('UnlockPassphrase', request => {
+    client.on('UnlockPassphrase', req => {
 	req.reply( "Passw0rd!" );
     });
 
-    let resp = await client.request( new structs.TLS.CreateCert( 512 ) );
+    let resp = await client.request( new structs.TLS.CreateCert.Request( 512 ) );
 
     resp[0];     // LairType  -> LairKeystoreIndex<Uint8Array>
     resp.get(0); // number    -> <LairType>.value()
