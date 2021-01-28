@@ -3,6 +3,7 @@ const log				= require('@whi/stdlog')(path.basename( __filename ), {
     level: (!__dirname.includes("/node_modules/") && process.env.LOG_LEVEL ) || 'fatal',
 });
 
+const net				= require('net');
 const stream				= require('stream');
 const { LairClientError,
         HEADER_SIZE }			= require('./constants.js');;
@@ -119,12 +120,20 @@ class MessageParser extends stream.Duplex {
 	const wt_id			= header_bytes.readUInt32LE(4);
 	const wt_cls			= structs[wt_id];
 	this.current_msg		= {
+	    "bytes":		header_bytes,
 	    "length":		header_bytes.readUInt32LE() - HEADER_SIZE,
 	    "wire_type":	wt_cls.name,
 	    "wire_type_id":	wt_id,
 	    "wire_type_class":	wt_cls,
 	    "id":		header_bytes.readBigUInt64LE(8),
 	    "payload":		() => payload_promise,
+	    "forward":		async (dest) => {
+		if ( !(dest instanceof stream.Writable) )
+		    throw new TypeError(`Destination must be an instance of stream.Writable: not ${dest.constructor.name}`);
+
+		dest.write( header_bytes );
+		dest.write( await payload_promise );
+	    },
 	};
 
 	this.emit('header', this.current_msg );

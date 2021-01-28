@@ -20,6 +20,27 @@ const half2_head			= "0100000000000000ae6dd17372ce0fba967ffe26ccf02cd8d7ce670028
 const rest_of_payload			= "7faae00ea2cacb27ba07d10ecb231c16672c0246af177da578ae57dafbed8a6f268d7f50e0247182f2a753509c3e998efde7d1139d47a38b51fb24451e3060a148d404de0b29e436299cb85876875b588ee2c59fe659b5857bb427f0f8d87a6fcee87ccd97b10472d1a5d402be705c73b936746e52dedec1ae06c980413503befd9e126f00edc4df30725d693a842d1be87450a8bac987c7c9181363b6672c50302db4bf5b26ca2924005f8417c21ee50eb5";
 
 
+class TestStream extends stream.Duplex {
+    _write ( buf ) {
+	if ( this.f ) {
+	    f( buf );
+	    delete this.f;
+	}
+	else
+	    this.msg			= buf;
+    }
+
+    next () {
+	return new Promise( f => {
+	    if ( this.msg ) {
+		f( this.msg );
+		delete this.msg;
+	    }
+	    else
+		this.f			= f;
+	});
+    }
+}
 
 function pipe_input_to_parser ( chunks, parser, interval = 10 ) {
     const iid			= setInterval(() => {
@@ -32,6 +53,24 @@ function pipe_input_to_parser ( chunks, parser, interval = 10 ) {
 }
 
 function parser_tests () {
+    it("should forward message to another stream", async () => {
+	const parser			= new MessageParser();
+	const destination		= new TestStream();
+
+	parser.write( Buffer.from( full_msg, "hex" ) );
+
+	for await ( let header of parser ) {
+	    if ( header === null )
+		throw new Error(`Parser should not get the opportunity for interval checks`);
+
+	    header.forward( destination );
+
+	    expect( await destination.next()	).to.deep.equal( header.bytes );
+
+	    break;
+	}
+    });
+
     it("should parse chunk with a complete message", async () => {
 	const parser			= new MessageParser();
 
