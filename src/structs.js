@@ -189,6 +189,11 @@ class LairResponse extends LairStruct {
   }
 }
 
+class ErrorResponse extends LairResponse {
+  static WIRE_TYPE = 0xFFFFFFFF
+  static PAYLOAD = [LairString]
+}
+
 // Unlock Passphrase
 class UnlockPassphraseRequest extends LairRequest {
   static WIRE_TYPE = 4278190096
@@ -350,6 +355,8 @@ class Ed25519SignByPublicKeyResponse extends LairResponse {
 }
 
 const ALL_WIRETYPE_CLASSES = {
+  ErrorResponse,
+
   UnlockPassphraseRequest,
   UnlockPassphraseResponse,
 
