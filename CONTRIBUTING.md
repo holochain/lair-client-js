@@ -14,7 +14,7 @@ See [docs/API.md](docs/API.md) for detailed API References
 ### Environment
 
 - Developed using Node.js `v12.15.0`
-- Integration tests used Lair `v0.0.1-alpha.5`
+- Integration tests used Lair `v0.0.1-alpha.12`
 
 Nix shell are in `default.nix`
 ```bash
