@@ -19,32 +19,11 @@ This module provides APIs for
 
 ### Basic Usage
 
-```javascript
-const { structs, ...lair } = require("@holochain/lair-client");
-
-(async () {
-    const client = lair.connect( <path to a Lair unix domain socket> );
-
-    client.on('UnlockPassphrase', req => {
-	req.reply( "Passw0rd!" );
-    });
-
-    let resp = await client.request( new structs.TLS.CreateCert.Request( 512 ) );
-
-    resp[0];     // LairType  -> LairKeystoreIndex<Uint8Array>
-    resp.get(0); // number    -> <LairType>.value()
-
-    resp[1];     // LairType  -> LairCertSNI<Uint8Array>
-    resp.get(1); // Buffer    -> <LairType>.value()
-
-    resp[2];     // LairType  -> LairDigest<Uint8Array>
-    resp.get(2); // Buffer    -> <LairType>.value()
-})();
-```
+`todo`
 
 ### API Reference
 
-See [docs/API.md](docs/API.md)
+`todo`
 
 ### Contributing
 

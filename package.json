@@ -1,38 +1,46 @@
 {
   "name": "@holochain/lair-client",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Javascript implementation of client for Lair Keystore",
-  "main": "src/index.js",
-  "module": "src/index.js",
-  "scripts": {
-    "test": "make test-debug",
-    "test-unit": "make test-unit-debug",
-    "test-integration": "make test-integration-debug"
-  },
-  "author": "Holochain",
-  "contributors": [
-    "Matthew Brisebois <matthew.brisebois@holo.host>",
-    "Zippy <eric@holo.host>"
+  "keywords": [
+    "holo",
+    "holochain",
+    "keystore",
+    "secret",
+    "cryptography"
   ],
-  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/holochain/lair-client-js"
   },
-  "files": [
-    "README.md",
-    "src/index.js",
-    "src/parser.js",
-    "src/structs.js",
-    "src/types.js",
-    "src/constants.js"
-  ],
+  "main": "src/index.js",
+  "type": "module",
+  "module": "src/index.js",
+  "license": "Apache-2.0",
+  "scripts": {
+    "lint": "standard",
+    "mocha": "mocha",
+    "doc": "jsdoc -d docs -R README.md src/index.js",
+    "test": "npm run-script lint && npm run-script mocha && npm run-script doc",
+    "doc-open": "npm run-script doc && xdg-open ./docs/index.html"
+  },
   "dependencies": {
-    "@whi/stdlog": "^0.3.4"
+    "libsodium-wrappers": "^0.7.9",
+    "msgpack-lite": "^0.1.26"
   },
   "devDependencies": {
-    "chai": "^4.2.0",
-    "mocha": "^8.2.1",
-    "why-is-node-running": "^2.2.0"
+    "babel-eslint": "^8.2.6",
+    "eslint": "^4.19.1",
+    "jsdoc": "^3.6.7",
+    "mocha": "^9.1.0",
+    "standard": "^16.0.3"
+  },
+  "standard": {
+    "ignore": [
+      "docs",
+      "test/*"
+    ],
+    "env": "mocha",
+    "parser": "babel-eslint"
   }
 }
