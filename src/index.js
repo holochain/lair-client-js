@@ -3,7 +3,11 @@
  */
 
 import _sodium from 'libsodium-wrappers'
+import { LairServerConfig } from './config.js'
 // import msgpack from 'msgpack-lite'
+
+// -- reexports -- //
+export { LairServerConfig }
 
 const _sodiumCfg = {
   sodiumReady: false
