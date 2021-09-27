@@ -4,10 +4,11 @@
 # Lair Client for Node.js
 Javascript implementation of client for Lair Keystore.
 
-
 [![](https://img.shields.io/github/issues-raw/holochain/lair-client-js?style=flat-square)](https://github.com/holochain/lair-client-js/issues)
 [![](https://img.shields.io/github/issues-closed-raw/holochain/lair-client-js?style=flat-square)](https://github.com/holochain/lair-client-js/issues?q=is%3Aissue+is%3Aclosed)
 [![](https://img.shields.io/github/issues-pr-raw/holochain/lair-client-js?style=flat-square)](https://github.com/holochain/lair-client-js/pulls)
+
+:warning: This is the NEW lair api, if you're looking for the classic one, see the `legacy-api` branch.
 
 ## Overview
 This module provides APIs for
@@ -23,7 +24,7 @@ This module provides APIs for
 
 ### API Reference
 
-`todo`
+See [https://holochain.github.io/lair-client-js/](https://holochain.github.io/lair-client-js/)
 
 ### Contributing
 
