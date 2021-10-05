@@ -65,10 +65,6 @@ class LairClient extends EventEmitter {
     super(options)
 
     const conn = net.createConnection(address)
-    conn.on('error', function (data) {
-      console.error(data)
-      process.exit(1)
-    })
 
     let connected
     this._connect_promise = new Promise((f, r) => {
